@@ -1,0 +1,32 @@
+{
+	"name": "lahore",
+	"description": "LAHORE · A City of Stories — a tiny-planet exploration game set in the Walled City of Lahore.",
+	"private": false,
+	"version": "1.0.0",
+	"type": "module",
+	"scripts": {
+		"dev": "vite dev",
+		"build": "vite build",
+		"preview": "vite preview",
+		"prepare": "svelte-kit sync || echo ''",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
+		"check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
+		"cloudinary:seed": "node scripts/cloudinary-seed.ts"
+	},
+	"devDependencies": {
+		"@sveltejs/adapter-auto": "next",
+		"@sveltejs/kit": "next",
+		"@sveltejs/vite-plugin-svelte": "^7.1.2",
+		"@types/node": "^25.9.3",
+		"@types/three": "^0.184.1",
+		"svelte": "^5.56.1",
+		"svelte-check": "^4.6.0",
+		"typescript": "^6.0.3",
+		"vite": "^8.0.16"
+	},
+	"dependencies": {
+		"cloudinary": "^2.11.0",
+		"three": "^0.184.0",
+		"three-mesh-bvh": "^0.9.18"
+	}
+}
