@@ -7,9 +7,13 @@
 {#if visible}
 	<div class="loading" out:fade={{ duration: 600 }} role="status" aria-live="polite">
 		<svg class="postcard" viewBox="0 0 120 84" aria-hidden="true">
-			<path d="M8 10 C40 6 82 8 112 11 C114 32 113 56 110 74 C78 77 40 76 10 73 C7 52 6 30 8 10 Z" fill="#fff" stroke="#2b2b2e" stroke-width="3" stroke-linejoin="round" />
-			<path d="M10 12 C34 34 50 44 60 46 C72 42 90 30 110 13" fill="none" stroke="#2b2b2e" stroke-width="3" stroke-linecap="round" />
-			<rect x="84" y="50" width="16" height="16" rx="2" fill="#c8423a" stroke="#2b2b2e" stroke-width="2.4" transform="rotate(-6 92 58)" />
+			<!-- tourist camera -->
+			<path d="M40 22 L48 14 L72 14 L80 22 Z" fill="#fff" stroke="#2b2b2e" stroke-width="3" stroke-linejoin="round" />
+			<rect x="12" y="22" width="96" height="50" rx="8" fill="#fff" stroke="#2b2b2e" stroke-width="3" stroke-linejoin="round" />
+			<circle cx="60" cy="48" r="17" fill="#fff" stroke="#2b2b2e" stroke-width="3" />
+			<circle cx="60" cy="48" r="8" fill="#c8423a" stroke="#2b2b2e" stroke-width="2.4" />
+			<circle cx="55" cy="43" r="2.5" fill="#fff" />
+			<rect x="86" y="30" width="12" height="7" rx="2" fill="#c8423a" stroke="#2b2b2e" stroke-width="2" />
 		</svg>
 		<p class="label">{error ? 'Something went wrong' : 'LOADING'}</p>
 		<div class="bar" aria-hidden="true"><span style="width: {Math.round(progress * 100)}%"></span></div>
