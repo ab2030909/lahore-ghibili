@@ -9,6 +9,7 @@ import {
 	PCFShadowMap,
 	PerspectiveCamera,
 	Scene,
+	SRGBColorSpace,
 	TextureLoader,
 	Vector3,
 	WebGLRenderer,
@@ -235,19 +236,20 @@ export class LahoreGame {
 		const progress = (p: number, label: string) => this.cb.onLoading?.(p, label);
 		progress(0.02, 'Packing your bags');
 		initKtx2Loader(this.renderer);
-		const [lut, noiseTerrain, waterNoise, cloudNoise, eye, mouth, decor] = await Promise.all([
+		const [lut, noiseTerrain, waterNoise, cloudNoise, eye, mouth, decor, introBg] = await Promise.all([
 			loadKtx2Texture(texturePaths.lut),
 			loadKtx2Texture(texturePaths.noiseTerrain),
 			loadKtx2Texture(texturePaths.waterNoise),
 			loadKtx2Texture(texturePaths.cloudNoise512),
 			loadKtx2Texture(texturePaths.eye),
 			loadKtx2Texture(texturePaths.mouth),
-			createDecorAtlas()
+			createDecorAtlas(),
+			new TextureLoader().loadAsync('/image.png').then((t) => { t.colorSpace = SRGBColorSpace; return t; }).catch(() => null)
 		]);
 		progress(0.15, 'Painting the tiles');
 		const palette = getPaletteTexture();
 
-		this.composer = createLahoreComposer(this.renderer, lut as Data3DTexture, cloudNoise);
+		this.composer = createLahoreComposer(this.renderer, lut as Data3DTexture, cloudNoise, introBg);
 		this.composer.setSize(this.host.clientWidth, this.host.clientHeight);
 
 		const world = await createLahoreWorld({ palette, decor, noiseTerrain, waterNoise, cloudNoise }, (label) => progress(0.2 + Math.random() * 0.02, label));

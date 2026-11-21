@@ -42,6 +42,8 @@ uniform sampler2D tDiffuse;
 uniform sampler2D tDepth;
 uniform sampler3D tLUT;
 uniform sampler2D tClouds;
+uniform sampler2D tIntroBg;
+uniform float uIntroBgAspect;
 uniform vec2 uResolution;
 uniform float uCameraNear;
 uniform float uCameraFar;
@@ -145,21 +147,13 @@ vec3 gameplaySky(vec3 dir) {
 	return col;
 }
 
+// Title backdrop: the supplied image.png, scaled to cover the screen.
 vec3 introSea(vec2 uv) {
-	float aspect = uResolution.x / uResolution.y;
-	vec2 p = vec2(uv.x * aspect, uv.y);
-	float n1 = texture2D(tClouds, p * 0.55 + vec2(uTime * 0.006, uTime * 0.003)).r;
-	float n2 = texture2D(tClouds, p * 0.9 - vec2(uTime * 0.004, -uTime * 0.005)).g;
-	float patches = smoothstep(0.58, 0.62, n1 * 0.7 + n2 * 0.45);
-	vec3 col = mix(uSeaColor, uSeaLight, patches * 0.55);
-	// tiny drifting particles, like the original intro
-	vec2 grid = p * 42.0 + vec2(uTime * 0.05, uTime * 0.02);
-	vec2 cell = floor(grid);
-	vec2 fr = fract(grid) - 0.5;
-	float rnd = fract(sin(dot(cell, vec2(12.9898, 78.233))) * 43758.5453);
-	float dotMask = step(0.965, rnd) * smoothstep(0.12, 0.05, length(fr));
-	col = mix(col, uSeaLight * 1.15, dotMask * 0.8);
-	return col;
+	float ratio = (uResolution.x / uResolution.y) / max(0.0001, uIntroBgAspect);
+	vec2 st = uv;
+	if (ratio > 1.0) st.y = (uv.y - 0.5) / ratio + 0.5;
+	else st.x = (uv.x - 0.5) * ratio + 0.5;
+	return texture2D(tIntroBg, st).rgb;
 }
 
 void main() {
@@ -208,12 +202,19 @@ void main() {
 	color = mix(color, uOutlineColor, edge * uOutlineStrength);
 
 	vec3 graded = apply3DLUTTetrahedral(max(color, vec3(0.0)), uLUTIntensity);
+	// show the title backdrop image ungraded so its colours match exactly
+	graded = mix(graded, color, isSky ? uIntroMix : 0.0);
 	graded = mix(graded, vec3(1.0), uFade);
 	gl_FragColor = vec4(graded, 1.0);
 }
 `;
 
 const linear = (hex: string) => new Color(hex);
+
+function aspectOf(tex: Texture | null): number {
+	const img = tex?.image as { width?: number; height?: number } | undefined;
+	return img?.width && img?.height ? img.width / img.height : 1024 / 463;
+}
 
 export type LahoreComposer = {
 	target: WebGLRenderTarget;
@@ -228,7 +229,8 @@ export type LahoreComposer = {
 export function createLahoreComposer(
 	renderer: WebGLRenderer,
 	lut: Data3DTexture | Texture,
-	clouds: Texture
+	clouds: Texture,
+	introBg: Texture | null = null
 ): LahoreComposer {
 	const size = renderer.getDrawingBufferSize(new Vector2());
 	const depthTexture = new DepthTexture(size.x, size.y);
@@ -258,6 +260,8 @@ export function createLahoreComposer(
 			tDepth: { value: depthTexture },
 			tLUT: { value: lut },
 			tClouds: { value: clouds },
+			tIntroBg: { value: introBg },
+			uIntroBgAspect: { value: aspectOf(introBg) },
 			uResolution: { value: new Vector2(size.x, size.y) },
 			uCameraNear: { value: 0.1 },
 			uCameraFar: { value: 600 },
@@ -273,8 +277,9 @@ export function createLahoreComposer(
 			uSkyTop: { value: linear('#8fc9df') },
 			uSkyHorizon: { value: linear('#f1e6cf') },
 			uSkyBelow: { value: linear('#d9cdb2') },
-			uSeaColor: { value: linear('#5fbfb9') },
-			uSeaLight: { value: linear('#7fd3cb') },
+			// warm cream title backdrop (bottom warm, top light)
+			uSeaColor: { value: linear('#f0d9b6') },
+			uSeaLight: { value: linear('#faf1de') },
 			uIntroMix: { value: 1 },
 			uTime: { value: 0 },
 			uFade: { value: 0 }

@@ -142,13 +142,13 @@
 		font-family: 'Bungee', 'Arial Black', sans-serif;
 		font-size: clamp(1.1rem, 2.2vw, 1.5rem);
 		letter-spacing: 0.12em;
-		color: #fff7df;
-		-webkit-text-stroke: 0.05em #373f42;
+		color: #ffffff;
+		-webkit-text-stroke: 0.05em #1f5a53;
 		paint-order: stroke fill;
-		background: #f2c14f;
-		border: 3px solid #373f42;
+		background: #2bb6a8;
+		border: 3px solid #1f5a53;
 		border-radius: 6px;
-		box-shadow: 0 6px 0 #373f42;
+		box-shadow: 0 6px 0 #1f5a53;
 		cursor: pointer;
 		opacity: 0;
 		animation: rise 0.6s ease-out 2.5s forwards;
@@ -160,12 +160,12 @@
 
 	.begin:hover {
 		transform: translateY(-2px) rotate(-2deg);
-		background: #f5cd68;
+		background: #35cabb;
 	}
 
 	.begin:active {
 		transform: translateY(4px);
-		box-shadow: 0 2px 0 #373f42;
+		box-shadow: 0 2px 0 #1f5a53;
 	}
 
 	.begin:focus-visible {
@@ -180,8 +180,8 @@
 		padding: 0 1rem;
 		font-family: 'Gochi Hand', 'Segoe Print', cursive;
 		font-size: 1.05rem;
-		color: #fff;
-		text-shadow: 0 2px 0 #373f42;
+		color: #2b2b2e;
+		text-shadow: none;
 		opacity: 0;
 		animation: rise 0.8s ease-out 3s forwards;
 	}

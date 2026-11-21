@@ -34,3 +34,5 @@ vite.config.ts.timestamp-*
 seed.log
 seed.err
 heritage-media/
+
+
