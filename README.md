@@ -2,6 +2,9 @@
 
 **Har gali mein aik kahani hai.** — *Every street has a story.*
 
+<img width="1840" height="854" alt="image" src="https://github.com/user-attachments/assets/67168c35-2841-464e-b8f3-0f6a0fceee76" />
+
+
 A tiny-planet exploration game set in Lahore. You arrive as a tourist and walk the Shahi
 Guzargah, the royal trail that runs from Delhi Gate past the Wazir Khan Mosque to the Lahore
 Fort, the Badshahi Mosque and the Fort Road Food Street. Talk to the people, climb the walls,
