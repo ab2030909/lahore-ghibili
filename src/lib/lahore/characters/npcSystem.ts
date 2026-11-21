@@ -44,6 +44,8 @@ export type NpcAgent = {
 	musician?: boolean;
 	/** Moved by a script (the cricket match): position, facing and walk speed are set externally. */
 	scripted?: { walkSpeed: number };
+	/** Accumulated time for distance-throttled animation updates. */
+	animDt?: number;
 };
 
 const tmp = new Vector3();
@@ -86,6 +88,7 @@ export class NpcSystem {
 	readonly agents: NpcAgent[] = [];
 	private library: NpcLibrary;
 	private time = 0;
+	private frame = 0;
 
 	constructor(library: NpcLibrary) {
 		this.library = library;
@@ -232,6 +235,7 @@ export class NpcSystem {
 
 	update(dt: number, player: Vector3, cameraPos: Vector3, elapsed: number) {
 		this.time += dt;
+		this.frame++;
 		for (const agent of this.agents) {
 			const dist = agent.position.distanceTo(player);
 			const camDist = agent.position.distanceTo(cameraPos);
@@ -263,8 +267,15 @@ export class NpcSystem {
 				if (target && !agent.sit) this.faceTowards(agent, target, dt * 4);
 				else agent.forward.lerp(agent.homeForward, 1 - Math.exp(-dt * 2)).normalize();
 			}
+			// position/facing update every frame (cheap, keeps movement smooth); the costly
+			// animation mixer updates less often for distant NPCs, staggered across frames
 			this.place(agent);
-			agent.rig.update(dt, walkSpeed);
+			agent.animDt = (agent.animDt ?? 0) + dt;
+			const stride = agent.talking || dist < 16 ? 1 : dist < 26 ? 2 : 3;
+			if ((this.frame + agent.id) % stride === 0) {
+				agent.rig.update(agent.animDt, walkSpeed);
+				agent.animDt = 0;
+			}
 		}
 	}
 

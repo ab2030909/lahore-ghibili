@@ -168,15 +168,24 @@ export class LahoreGame {
 	private jumpTimer: ReturnType<typeof setTimeout> | null = null;
 	private fps = { frames: 0, time: 0 };
 	private disposed = false;
+	// adaptive resolution: render at the sharpest pixel ratio that still holds ~30 fps
+	private readonly maxPixelRatio = Math.min(window.devicePixelRatio || 1, 1.75);
+	private readonly minPixelRatio = Math.min(this.maxPixelRatio, 1);
+	private pixelRatio = this.maxPixelRatio;
+	private drs = { time: 0, frames: 0 };
+	private shadowTick = 0;
 
 	constructor(host: HTMLElement, callbacks: GameCallbacks) {
 		this.host = host;
 		this.cb = callbacks;
 		this.renderer = new WebGLRenderer({ antialias: false, alpha: false, powerPreference: 'high-performance' });
-		this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 1.75));
+		this.renderer.setPixelRatio(this.pixelRatio);
 		this.renderer.setSize(host.clientWidth, host.clientHeight);
 		this.renderer.shadowMap.enabled = true;
 		this.renderer.shadowMap.type = PCFShadowMap;
+		// shadows are refreshed on a cadence (updateShadow), not every frame: the sun barely
+		// moves between frames, so re-rendering the whole shadow depth pass each frame is waste.
+		this.renderer.shadowMap.autoUpdate = false;
 		this.renderer.autoClear = false;
 		this.renderer.setClearColor(0x000000, 1);
 		host.appendChild(this.renderer.domElement);
@@ -1019,16 +1028,36 @@ export class LahoreGame {
 		this.updateWorldLife(dt);
 		this.updateAudio(dt);
 
+		// refresh the shadow map every other frame (the sun is effectively static frame-to-frame)
+		this.renderer.shadowMap.needsUpdate = (this.shadowTick++ & 1) === 0;
 		if (this.composer) this.composer.render(this.scene, this.camera);
 
 		this.fps.frames++;
 		this.fps.time += dt;
 		if (this.fps.time > 1) {
-			this.cb.onStats?.({ fps: Math.round(this.fps.frames / this.fps.time), triangles: this.world?.stats.triangles ?? 0, npcs: this.npcs?.agents.length ?? 0 });
+			const fps = Math.round(this.fps.frames / this.fps.time);
+			this.adaptResolution(fps);
+			this.cb.onStats?.({ fps, triangles: this.world?.stats.triangles ?? 0, npcs: this.npcs?.agents.length ?? 0 });
 			this.fps.frames = 0;
 			this.fps.time = 0;
 		}
 	};
+
+	/**
+	 * Dynamic resolution: pick the sharpest device pixel ratio that still holds ~30 fps.
+	 * It only drops below native when the GPU cannot keep up, and climbs back when it can.
+	 */
+	private adaptResolution(fps: number) {
+		const target = 30;
+		let pr = this.pixelRatio;
+		if (fps < target - 3 && pr > this.minPixelRatio) pr = Math.max(this.minPixelRatio, +(pr - 0.15).toFixed(3));
+		else if (fps > target + 12 && pr < this.maxPixelRatio) pr = Math.min(this.maxPixelRatio, +(pr + 0.1).toFixed(3));
+		if (pr !== this.pixelRatio) {
+			this.pixelRatio = pr;
+			this.renderer.setPixelRatio(pr);
+			this.resize();
+		}
+	}
 
 	private resize() {
 		const w = this.host.clientWidth;

@@ -115,23 +115,47 @@ for (const landmark of LANDMARKS) {
 					: undefined,
 			eager_async: true
 		};
-		// the original file URL (CDN-cached) is far less rate-limited than the /thumb/ renderer
-		try {
+		// Wikimedia rate-limits direct fetches (429). Route through the weserv.nl image proxy,
+		// whose own servers fetch and cache Commons — Cloudinary pulls from the proxy, not from
+		// the blocked path. Try proxy -> direct original -> local download, in that order.
+		const bare = photo.source.replace(/^https?:\/\//, '');
+		const sources = [
+			`https://images.weserv.nl/?url=${encodeURIComponent(bare)}&n=-1`,
+			`https://api.allorigins.win/raw?url=${encodeURIComponent(photo.source)}`,
+			`https://corsproxy.io/?url=${encodeURIComponent(photo.source)}`,
+			photo.source
+		];
+		let done = false;
+		for (const src of sources) {
 			try {
-				// let Cloudinary fetch the original directly (no bandwidth through this machine)
-				await cloudinary.uploader.upload(photo.source, options);
+				await cloudinary.uploader.upload(src, options);
+				done = true;
+				break;
 			} catch (error) {
-				console.warn(`  remote upload refused (${(error as Error).message ?? error}); downloading locally`);
-				await cloudinary.uploader.upload(await asDataUri(photo.source), options);
+				console.warn(`  via ${src.includes('weserv') ? 'proxy' : 'direct'} refused: ${(error as Error).message ?? error}`);
 			}
+		}
+		if (!done) {
+			// last resort: download the bytes to this machine via each proxy, then upload
+			for (const src of sources) {
+				try {
+					await cloudinary.uploader.upload(await asDataUri(src), options);
+					done = true;
+					break;
+				} catch {
+					/* try the next proxy */
+				}
+			}
+			if (!done) {
+				console.error(`! ${publicId} skipped: every source failed`);
+				failed.push(publicId);
+			}
+		}
+		if (done) {
 			console.log(`+ ${publicId}`);
 			uploaded++;
-		} catch (error) {
-			console.error(`! ${publicId} skipped: ${(error as Error).message ?? error}`);
-			failed.push(publicId);
 		}
-		// be polite to Commons between photos
-		await sleep(1500);
+		await sleep(800);
 	}
 
 	const video = resolve('heritage-media', `${landmark.id}.mp4`);

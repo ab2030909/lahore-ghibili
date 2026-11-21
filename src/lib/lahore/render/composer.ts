@@ -237,7 +237,9 @@ export function createLahoreComposer(
 		type: HalfFloatType,
 		depthBuffer: true,
 		depthTexture,
-		samples: 4
+		// 2x MSAA: the flat toon shading plus the outline pass make 4x indistinguishable,
+		// and MSAA on a HalfFloat target is heavy on memory bandwidth.
+		samples: 2
 	});
 	target.texture.name = 'LahoreSceneColor';
 
