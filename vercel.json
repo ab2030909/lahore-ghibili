@@ -3,5 +3,12 @@
 	"framework": null,
 	"buildCommand": "pnpm run build",
 	"outputDirectory": "build",
-	"installCommand": "pnpm install --no-frozen-lockfile"
+	"installCommand": "pnpm install --no-frozen-lockfile",
+	"build": {
+		"env": {
+			"PUBLIC_CLOUDINARY_CLOUD_NAME": "tgjvnqns",
+			"PUBLIC_CLOUDINARY_FOLDER": "lahore-heritage",
+			"PUBLIC_CLOUDINARY_DELIVERY": "upload"
+		}
+	}
 }
