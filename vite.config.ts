@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import adapter from '@sveltejs/adapter-auto';
+import adapter from '@sveltejs/adapter-static';
 import { sveltekit } from '@sveltejs/kit/vite';
 
 export default defineConfig({
@@ -10,9 +10,9 @@ export default defineConfig({
 				runes: ({ filename }) => (filename.split(/[/\\]/).includes('node_modules') ? undefined : true),
 				experimental: { async: true }
 			},
-			// adapter-auto covers the common hosts; swap it for a specific adapter if you deploy
-			// somewhere it does not detect. See https://svelte.dev/docs/kit/adapters
-			adapter: adapter(),
+			// Static SPA build (the game is fully client-rendered). Served as plain static
+			// files on Vercel; `fallback` makes it a single-page app. See adapter-static docs.
+			adapter: adapter({ fallback: 'index.html', strict: false }),
 			experimental: { remoteFunctions: true, handleRenderingErrors: true }
 		})
 	]
